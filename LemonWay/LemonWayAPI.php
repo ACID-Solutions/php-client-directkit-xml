@@ -1,27 +1,47 @@
 <?php
+
 namespace LemonWay;
 
 use LemonWay\Lib\LwException;
+use SimpleXMLElement;
 
 class LemonWayAPI
 {
     /**
      * Configuration instance
+     *
      * @var \LemonWay\Lib\Config
      */
     public $config;
-
     /**
      * Used for Debug mode
+     *
      * @var boolean
      */
     private $printInputAndOutputXml = false;
 
     /**
      * LemonWayKit constructor.
+     *
+     * @param string $directKitUrl
+     * @param string $webKitUrl
+     * @param string $login
+     * @param string $password
+     * @param string $lang
+     * @param bool $debug
+     * @param bool $sslVerification
+     * @param string $xmlns
      */
-    public function __construct($directKitUrl = '', $webKitUrl = '',  $login = '', $password = '', $lang = 'en', $debug = false, $sslVerification = true)
-    {
+    public function __construct(
+        $directKitUrl = '',
+        $webKitUrl = '',
+        $login = '',
+        $password = '',
+        $lang = 'en',
+        $debug = false,
+        $sslVerification = true,
+        $xmlns = 'Service_mb_xml'
+    ) {
         $this->config = new Lib\Config();
         $this->config->dkUrl = $directKitUrl;
         $this->config->wkUrl = $webKitUrl;
@@ -30,6 +50,7 @@ class LemonWayAPI
         $this->config->wlPass = $password;
         $this->config->lang = $lang;
         $this->config->isDebugEnabled = $debug;
+        $this->config->xmlns = $xmlns;
     }
 
     /**
@@ -38,11 +59,12 @@ class LemonWayAPI
      * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function RegisterWallet($params)
     {
         $res = $this->sendRequest('RegisterWallet', $params, '1.1');
-        if (!isset($res->lwError)) {
+        if (! isset($res->lwError)) {
             $res->wallet = new Models\Wallet($res->lwXml->WALLET);
         }
 
@@ -52,14 +74,15 @@ class LemonWayAPI
     /**
      * Money In
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function MoneyIn($params)
     {
         $res = $this->sendRequest('MoneyIn', $params, '1.1');
-        if (!isset($res->lwError)) {
+        if (! isset($res->lwError)) {
             $res->operation = new Models\Operation($res->lwXml->TRANS->HPAY);
         }
 
@@ -69,14 +92,15 @@ class LemonWayAPI
     /**
      * Update Wallet Details
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function UpdateWalletDetails($params)
     {
         $res = $this->sendRequest('UpdateWalletDetails', $params, '1.0');
-        if (!isset($res->lwError)) {
+        if (! isset($res->lwError)) {
             $res->wallet = new Models\Wallet($res->lwXml->WALLET);
         }
 
@@ -86,14 +110,15 @@ class LemonWayAPI
     /**
      * Get Wallet Details
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function GetWalletDetails($params)
     {
         $res = $this->sendRequest('GetWalletDetails', $params, '1.8');
-        if (!isset($res->lwError)) {
+        if (! isset($res->lwError)) {
             $res->wallet = new Models\Wallet($res->lwXml->WALLET);
         }
 
@@ -103,14 +128,15 @@ class LemonWayAPI
     /**
      * Money In 3D Init
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function MoneyIn3DInit($params)
     {
         $res = $this->sendRequest('MoneyIn3DInit', $params, '1.1');
-        if (!isset($res->lwError)) {
+        if (! isset($res->lwError)) {
             $res->operation = new Models\Operation($res->lwXml->MONEYIN3DINIT->TRANS->HPAY);
             $res->acs = new Models\Acs($res->lwXml->MONEYIN3DINIT->ACS);
         }
@@ -121,25 +147,28 @@ class LemonWayAPI
     /**
      * Money In 3D Confirm
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function MoneyIn3DConfirm($params)
     {
         $res = $this->sendRequest('MoneyIn3DConfirm', $params, '1.1');
-        if (!isset($res->lwError)) {
+        if (! isset($res->lwError)) {
             $res->operation = new Models\Operation($res->lwXml->MONEYIN3DCONFIRM->HPAY);
         }
+
         return $res;
     }
 
     /**
      * Money In Web Init
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function MoneyInWebInit($params)
     {
@@ -149,46 +178,51 @@ class LemonWayAPI
     /**
      * Register Card
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function RegisterCard($params)
     {
         $res = $this->sendRequest('RegisterCard', $params, '1.2');
-        if (!isset($res->lwError)) {
+        if (! isset($res->lwError)) {
             $res->card = new Models\Card($res->lwXml->CARD);
         }
+
         return $res;
     }
 
     /**
      * Unregister Card
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function UnregisterCard($params)
     {
         $res = $this->sendRequest('UnregisterCard', $params, '1.0');
-        if (!isset($res->lwError)) {
+        if (! isset($res->lwError)) {
             $res->card = new Models\Card($res->lwXml->CARD);
         }
+
         return $res;
     }
 
     /**
      * Money In With Card Id
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function MoneyInWithCardId($params)
     {
         $res = $this->sendRequest('MoneyInWithCardId', $params, '1.1');
-        if (!isset($res->lwError)) {
+        if (! isset($res->lwError)) {
             $res->operation = new Models\Operation($res->lwXml->TRANS->HPAY);
         }
 
@@ -198,14 +232,15 @@ class LemonWayAPI
     /**
      * Money In Validate
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function MoneyInValidate($params)
     {
         $res = $this->sendRequest('MoneyInValidate', $params, '1.0');
-        if (!isset($res->lwError)) {
+        if (! isset($res->lwError)) {
             $res->operation = new Models\Operation($res->lwXml->MONEYIN->HPAY);
         }
 
@@ -215,14 +250,15 @@ class LemonWayAPI
     /**
      * Send Payment
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function SendPayment($params)
     {
         $res = $this->sendRequest('SendPayment', $params, '1.0');
-        if (!isset($res->lwError)) {
+        if (! isset($res->lwError)) {
             $res->operation = new Models\Operation($res->lwXml->TRANS->HPAY);
         }
 
@@ -232,14 +268,15 @@ class LemonWayAPI
     /**
      * Register IBAN
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function RegisterIBAN($params)
     {
         $res = $this->sendRequest('RegisterIBAN', $params, '1.1');
-        if (!isset($res->lwError)) {
+        if (! isset($res->lwError)) {
             $res->iban = new Models\Iban($res->lwXml->IBAN);
         }
 
@@ -249,14 +286,15 @@ class LemonWayAPI
     /**
      * Register IBAN Extended
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function RegisterIBANExtended($params)
     {
         $res = $this->sendRequest('RegisterIBANExtended', $params, '1.1');
-        if (!isset($res->lwError)) {
+        if (! isset($res->lwError)) {
             $res->iban = new Models\Iban($res->lwXml->IBAN);
         }
 
@@ -266,14 +304,15 @@ class LemonWayAPI
     /**
      * Money Out
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function MoneyOut($params)
     {
         $res = $this->sendRequest('MoneyOut', $params, '1.3');
-        if (!isset($res->lwError)) {
+        if (! isset($res->lwError)) {
             $res->operation = new Models\Operation($res->lwXml->TRANS->HPAY);
         }
 
@@ -283,15 +322,16 @@ class LemonWayAPI
     /**
      * Get Payement Details
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function GetPaymentDetails($params)
     {
         $res = $this->sendRequest('GetPaymentDetails', $params, '1.0');
-        if (!isset($res->lwError)) {
-            $res->operations = array();
+        if (! isset($res->lwError)) {
+            $res->operations = [];
             foreach ($res->lwXml->TRANS->HPAY as $HPAY) {
                 $res->operations[] = new Models\Operation($HPAY);
             }
@@ -303,15 +343,16 @@ class LemonWayAPI
     /**
      * Get Money In Trans Details
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function GetMoneyInTransDetails($params)
     {
         $res = $this->sendRequest('GetMoneyInTransDetails', $params, '10.0');
-        if (!isset($res->lwError)) {
-            $res->operations = array();
+        if (! isset($res->lwError)) {
+            $res->operations = [];
             foreach ($res->lwXml->TRANS->HPAY as $HPAY) {
                 $res->operations[] = new Models\Operation($HPAY);
             }
@@ -323,15 +364,16 @@ class LemonWayAPI
     /**
      * Get Money Out Trans Details
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function GetMoneyOutTransDetails($params)
     {
         $res = $this->sendRequest('GetMoneyOutTransDetails', $params, '1.4');
-        if (!isset($res->lwError)) {
-            $res->operations = array();
+        if (! isset($res->lwError)) {
+            $res->operations = [];
             foreach ($res->lwXml->TRANS->HPAY as $HPAY) {
                 $res->operations[] = new Models\Operation($HPAY);
             }
@@ -343,14 +385,15 @@ class LemonWayAPI
     /**
      * Upload File
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function UploadFile($params)
     {
         $res = $this->sendRequest('UploadFile', $params, '1.1');
-        if (!isset($res->lwError)) {
+        if (! isset($res->lwError)) {
             $res->kycDoc = new Models\KycDoc($res->lwXml->UPLOAD);
         }
 
@@ -360,15 +403,16 @@ class LemonWayAPI
     /**
      * Get Kyc Status
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function GetKycStatus($params)
     {
         $res = $this->sendRequest('GetKycStatus', $params, '1.5');
-        if (!isset($res->lwError)) {
-            $res->wallets = array();
+        if (! isset($res->lwError)) {
+            $res->wallets = [];
             foreach ($res->lwXml->WALLETS->WALLET as $WALLET) {
                 $res->wallets[] = new Models\Wallet($WALLET);
             }
@@ -380,15 +424,16 @@ class LemonWayAPI
     /**
      * Get Money In IBAN Details
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function GetMoneyInIBANDetails($params)
     {
         $res = $this->sendRequest('GetMoneyInIBANDetails', $params, '1.4');
-        if (!isset($res->lwError)) {
-            $res->operations = array();
+        if (! isset($res->lwError)) {
+            $res->operations = [];
             foreach ($res->lwXml->TRANS->HPAY as $HPAY) {
                 $res->operations[] = new Models\Operation($HPAY);
             }
@@ -400,14 +445,15 @@ class LemonWayAPI
     /**
      * Refund Money In
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function RefundMoneyIn($params)
     {
         $res = $this->sendRequest('RefundMoneyIn', $params, '1.2');
-        if (!isset($res->lwError)) {
+        if (! isset($res->lwError)) {
             $res->operation = new Models\Operation($res->lwXml->TRANS->HPAY);
         }
 
@@ -417,15 +463,16 @@ class LemonWayAPI
     /**
      * Get Balances
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function GetBalances($params)
     {
         $res = $this->sendRequest('GetBalances', $params, '1.0');
-        if (!isset($res->lwError)) {
-            $res->wallets = array();
+        if (! isset($res->lwError)) {
+            $res->wallets = [];
             foreach ($res->lwXml->WALLETS->WALLET as $WALLET) {
                 $res->wallets[] = new Models\Wallet($WALLET);
             }
@@ -437,9 +484,10 @@ class LemonWayAPI
     /**
      * Money In 3D Authenticate
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function MoneyIn3DAuthenticate($params)
     {
@@ -449,7 +497,7 @@ class LemonWayAPI
     /**
      * Money In Deal Init
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
      */
@@ -461,32 +509,33 @@ class LemonWayAPI
     /**
      * Money In Deal Confirm
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function MoneyInIDealConfirm($params)
     {
         $res = $this->sendRequest('MoneyInIDealConfirm', $params, '1.0');
-        if (!isset($res->lwError)) {
+        if (! isset($res->lwError)) {
             $res->operation = new Models\Operation($res->lwXml->TRANS->HPAY);
         }
 
         return $res;
-
     }
 
     /**
      * Register Sdd Mandate
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function RegisterSddMandate($params)
     {
         $res = $this->sendRequest('RegisterSddMandate', $params, '1.0');
-        if (!isset($res->lwError)) {
+        if (! isset($res->lwError)) {
             $res->sddMandate = new Models\SddMandate($res->lwXml->SDDMANDATE);
         }
 
@@ -496,14 +545,15 @@ class LemonWayAPI
     /**
      * Unregister SDD Mandate
      *
-     * @param array    $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function UnregisterSddMandate($params)
     {
         $res = $this->sendRequest('UnregisterSddMandate', $params, '1.0');
-        if (!isset($res->lwError)) {
+        if (! isset($res->lwError)) {
             $res->sddMandate = new Models\SddMandate($res->lwXml->SDDMANDATE);
         }
 
@@ -513,70 +563,76 @@ class LemonWayAPI
     /**
      * Money In SDD Init
      *
-     * @param array     $params
+     * @param array $params
+     *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function MoneyInSddInit($params)
     {
         $res = $this->sendRequest('MoneyInSddInit', $params, '1.0');
-        if (!isset($res->lwError)) {
+        if (! isset($res->lwError)) {
             $res->operation = new Models\Operation($res->lwXml->TRANS->HPAY);
         }
-        return $res;
 
+        return $res;
     }
 
     /**
      * Get Money In SDD
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function GetMoneyInSdd($params)
     {
         $res = $this->sendRequest('GetMoneyInSdd', $params, '1.0');
-        if (!isset($res->lwError)) {
-            $res->operations = array();
+        if (! isset($res->lwError)) {
+            $res->operations = [];
             foreach ($res->lwXml->TRANS->HPAY as $HPAY) {
                 $res->operations[] = new Models\Operation($HPAY);
             }
         }
+
         return $res;
     }
 
     /**
      * Get Money In Cheque Details
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function GetMoneyInChequeDetails($params)
     {
         $res = $this->sendRequest('GetMoneyInChequeDetails', $params, '1.9');
-        if (!isset($res->lwError)) {
-            $res->operations = array();
+        if (! isset($res->lwError)) {
+            $res->operations = [];
             foreach ($res->lwXml->TRANS->HPAY as $HPAY) {
                 $res->operations[] = new Models\Operation($HPAY);
             }
         }
+
         return $res;
     }
-
 
     /**
      * Get Wallet Trans History
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function GetWalletTransHistory($params)
     {
         $res = $this->sendRequest('GetWalletTransHistory', $params, '2.0');
-        if (!isset($res->lwError)) {
-            $res->operations = array();
+        if (! isset($res->lwError)) {
+            $res->operations = [];
             foreach ($res->lwXml->TRANS->HPAY as $HPAY) {
                 $res->operations[] = new Models\Operation($HPAY);
             }
@@ -588,14 +644,15 @@ class LemonWayAPI
     /**
      * Update Wallet Status
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function UpdateWalletStatus($params)
     {
         $res = $this->sendRequest('UpdateWalletStatus', $params, '1.0');
-        if (!isset($res->lwError)) {
+        if (! isset($res->lwError)) {
             $res->wallet = new Models\Wallet($res->lwXml->WALLET);
         }
 
@@ -605,9 +662,10 @@ class LemonWayAPI
     /**
      * Sign document Init for SDD
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function SignDocumentInit($params)
     {
@@ -617,14 +675,15 @@ class LemonWayAPI
     /**
      * Init Cheque
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function MoneyInChequeInit($params)
     {
         $res = $this->sendRequest('MoneyInChequeInit', $params, '1.0');
-        if (!isset($res->lwError)) {
+        if (! isset($res->lwError)) {
             $res->operation = new Models\Operation($res->lwXml->TRANS->HPAY);
         }
 
@@ -634,9 +693,10 @@ class LemonWayAPI
     /**
      * Money In Sofor Init
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function MoneyInSofortInit($params)
     {
@@ -646,14 +706,15 @@ class LemonWayAPI
     /**
      * Money In Neosurf
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function MoneyInNeosurf($params)
     {
         $res = $this->sendRequest('MoneyInNeosurf', $params, '1.0');
-        if (!isset($res->lwError)) {
+        if (! isset($res->lwError)) {
             $res->operation = new Models\Operation($res->lwXml->TRANS->HPAY);
         }
 
@@ -663,9 +724,10 @@ class LemonWayAPI
     /**
      * Create Payment Form
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function CreatePaymentForm($params)
     {
@@ -675,9 +737,10 @@ class LemonWayAPI
     /**
      * Disable Payment Form
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function DisablePaymentForm($params)
     {
@@ -687,9 +750,10 @@ class LemonWayAPI
     /**
      * Get Completed Payment Form
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function GetCompletedPaymentForm($params)
     {
@@ -699,15 +763,16 @@ class LemonWayAPI
     /**
      * Get Charge backs
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function GetChargebacks($params)
     {
         $res = $this->sendRequest('GetChargebacks', $params, '1.8');
-        if (!isset($res->lwError)) {
-            $res->operations = array();
+        if (! isset($res->lwError)) {
+            $res->operations = [];
             foreach ($res->lwXml->TRANS->HPAY as $HPAY) {
                 $res->operations[] = new Models\Operation($HPAY);
             }
@@ -716,18 +781,18 @@ class LemonWayAPI
         return $res;
     }
 
-
     /**
      * Ceeate Virtual Credit Card
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function CreateVCC($params)
     {
         $res = $this->sendRequest('CreateVCC', $params, '1.0');
-        if (!isset($res->lwError)) {
+        if (! isset($res->lwError)) {
             $res->operation = new Models\Operation($res->lwXml->TRANS->HPAY);
         }
 
@@ -737,20 +802,37 @@ class LemonWayAPI
     /**
      * Get Offers and Ads from Partners
      *
-     * @param array     $params
+     * @param array $params
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     public function GetWizypayAds($params)
     {
         return $this->sendRequest('GetWizypayAds', $params, '1.0');
     }
 
+    /**
+     * Create login for the Back Office
+     *
+     * @param $params
+     *
+     * @return \LemonWay\ApiResponse
+     * @throws \LemonWay\Lib\LwException
+     */
     public function CreateLoginBo($params)
     {
         return $this->sendRequest('CreateLoginBo', $params, '1.0');
     }
 
+    /**
+     * Update a login for the Back Office
+     *
+     * @param $params
+     *
+     * @return \LemonWay\ApiResponse
+     * @throws \LemonWay\Lib\LwException
+     */
     public function UpdateLoginBo($params)
     {
         return $this->sendRequest('UpdateLoginBo', $params, '1.0');
@@ -759,23 +841,23 @@ class LemonWayAPI
     /**
      * Print Direct API Output
      *
-     * @param string    $res
+     * @param string $res
      */
     private function printDirectkitOutput($res)
     {
         if ($this->config->isDebugEnabled) {
             print '<br/>DEBUG OUTPUT START<br/>';
             foreach ($res[0] as $keyLevel1 => $valueLevel1) {
-                print (string)$keyLevel1 . ' : ' . (string)$valueLevel1;
+                print (string) $keyLevel1 . ' : ' . (string) $valueLevel1;
                 if ($valueLevel1->count() > 0) {
                     foreach ($valueLevel1 as $keyLevel2 => $valueLevel2) {
-                        print '<br/>----' . (string)$keyLevel2 . ' : ' . (string)$valueLevel2;
+                        print '<br/>----' . (string) $keyLevel2 . ' : ' . (string) $valueLevel2;
                         if ($valueLevel2->count() > 0) {
                             foreach ($valueLevel2 as $keyLevel3 => $valueLevel3) {
-                                print '<br/>--------' . (string)$keyLevel3 . ' : ' . (string)$valueLevel3;
+                                print '<br/>--------' . (string) $keyLevel3 . ' : ' . (string) $valueLevel3;
                                 if ($valueLevel3->count() > 0) {
                                     foreach ($valueLevel3 as $keyLevel4 => $valueLevel4) {
-                                        print '<br/>------------' . (string)$keyLevel4 . ' : ' . (string)$valueLevel4;
+                                        print '<br/>------------' . (string) $keyLevel4 . ' : ' . (string) $valueLevel4;
                                     }
                                 }
                             }
@@ -790,14 +872,13 @@ class LemonWayAPI
     /**
      * Print Direct API Input
      *
-     * @param string    $string
+     * @param string $string
      */
     private function printDirectkitInput($string)
     {
         if ($this->config->isDebugEnabled) {
             print '<br/>DEBUG INTPUT START<br/>';
             echo htmlentities($string);
-            //$xml = new SimpleXMLElement($string); echo $xml->asXML();
             print '<br/>DEBUG INTPUT END<br/>';
         }
     }
@@ -805,36 +886,40 @@ class LemonWayAPI
     /**
      * Send Request to DirectKitUrl
      *
-     * @param string    $methodName
-     * @param array     $params
-     * @param string    $version
+     * @param string $methodName
+     * @param array $params
+     * @param string $version
      *
      * @return ApiResponse
+     * @throws \LemonWay\Lib\LwException
      */
     private function sendRequest($methodName, $params, $version)
     {
-        $xmlns = 'Service_mb_xml';
-
         $ua = '';
-        if(isset($_SERVER['HTTP_USER_AGENT'])) {
+        if (isset($_SERVER['HTTP_USER_AGENT'])) {
             $ua = $_SERVER['HTTP_USER_AGENT'];
-        } elseif($this->config->user_agent) {
+        } elseif ($this->config->user_agent) {
             $ua = $this->config->user_agent;
         }
 
         $ip = '';
-        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+        if (! empty($_SERVER['HTTP_CLIENT_IP'])) {
             $ip = $_SERVER['HTTP_CLIENT_IP'];
-        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        } elseif (! empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
             $tmpip = explode(",", $_SERVER['HTTP_X_FORWARDED_FOR']);
             $ip = trim($tmpip[0]);
-        } elseif (!empty($_SERVER['REMOTE_ADDR'])) {
+        } elseif (! empty($_SERVER['REMOTE_ADDR'])) {
             $ip = $_SERVER['REMOTE_ADDR'];
-        } elseif($this->config->remote_addr){
+        } elseif ($this->config->remote_addr) {
             $ip = $this->config->remote_addr;
         }
 
-        $xml_soap = '<?xml version="1.0" encoding="utf-8"?><soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope"><soap12:Body><' . $methodName . ' xmlns="' . $xmlns . '">';
+        $xml_soap = '<?xml version="1.0" encoding="utf-8"?>' .
+            '<soap12:Envelope ' .
+            'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' .
+            'xmlns:xsd="http://www.w3.org/2001/XMLSchema" ' .
+            'xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">' .
+            '<soap12:Body><' . $methodName . ' xmlns="' . $this->config->xmlns . '">';
 
         foreach ($params as $key => $value) {
             $xml_soap .= '<' . $key . '>' . $this->cleanRequest($value) . '</' . $key . '>';
@@ -845,17 +930,17 @@ class LemonWayAPI
         $xml_soap .= '<language>' . $this->config->lang . '</language>';
         $xml_soap .= '<walletIp>' . $ip . '</walletIp>';
         $xml_soap .= '<walletUa>' . $ua . '</walletUa>';
-
         $xml_soap .= '</' . $methodName . '></soap12:Body></soap12:Envelope>';
         $this->printDirectkitInput($xml_soap);
 
-        $headers = array("Content-type: text/xml;charset=utf-8",
+        $headers = [
+            "Content-type: text/xml;charset=utf-8",
             "Accept: application/xml",
             "Cache-Control: no-cache",
             "Pragma: no-cache",
-            'SOAPAction: "' . $xmlns . '/' . $methodName . '"',
+            'SOAPAction: "' . $this->config->xmlns . '/' . $methodName . '"',
             "Content-length: " . strlen($xml_soap),
-        );
+        ];
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $this->config->dkUrl);
@@ -872,29 +957,34 @@ class LemonWayAPI
             error_log('curl_err : ' . curl_error($ch));
             throw new LwException(curl_error($ch), LwException::UNKNOWN_ERROR);
         } else {
-            $returnCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $returnCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
             switch ($returnCode) {
                 case 200:
                     //General parsing
                     //Cleanup XML
-                    $response = (string)str_replace('<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">', '', $response);
-                    $response = (string)str_replace('</soap:Envelope>', '', $response);
+                    $search = '<?xml version="1.0" encoding="utf-8"?>' .
+                        '<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" ' .
+                        'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' .
+                        'xmlns:xsd="http://www.w3.org/2001/XMLSchema">';
+
+                    $response = (string) str_replace($search, '', $response);
+                    $response = (string) str_replace('</soap:Envelope>', '', $response);
                     libxml_use_internal_errors(true);
-                    $xml = new \SimpleXMLElement($response);
+                    $xml = new SimpleXMLElement($response);
                     //Retrieve result
                     $content = '';
-                    switch($methodName){
+                    switch ($methodName) {
                         case 'UnregisterSddMandate':
                             $content = $xml->{$methodName . 'Response'}->{'UnRegisterSddMandateResult'};
                             break;
 
                         case 'MoneyInWithCardId':
-                            $content = $xml->{$methodName.'Response'}->{'MoneyInResult'};
+                            $content = $xml->{$methodName . 'Response'}->{'MoneyInResult'};
                             break;
 
                         case 'GetChargebacks':
-                            $content = $xml->{$methodName.'Response'}->{'GetChargeBacksResult'};
+                            $content = $xml->{$methodName . 'Response'}->{'GetChargeBacksResult'};
                             break;
 
                         default:
@@ -903,18 +993,32 @@ class LemonWayAPI
                     }
 
                     $this->printDirectkitOutput($content);
+
                     return new ApiResponse($content);
                 case 400:
-                    throw new LwException("Bad Request : The server cannot or will not process the request due to something that is perceived to be a client error", LwException::BAD_REQUEST);
+                    throw new LwException(
+                        'Bad Request : The server cannot or will not process the request due to ' .
+                        'something that is perceived to be a client error',
+                        LwException::BAD_REQUEST
+                    );
                     break;
                 case 403:
-                    throw new LwException("IP is not allowed to access Lemon Way's API, please contact support@lemonway.com", LwException::BAD_IP);
+                    throw new LwException(
+                        "IP is not allowed to access Lemon Way's API, please contact support@lemonway.com",
+                        LwException::BAD_IP
+                    );
                     break;
                 case 404:
-                    throw new LwException("Check that the access URLs are correct. If yes, please contact support@lemonway.com", LwException::NOT_FOUND);
+                    throw new LwException(
+                        "Check that the access URLs are correct. If yes, please contact support@lemonway.com",
+                        LwException::NOT_FOUND
+                    );
                     break;
                 case 500:
-                    throw new LwException("Lemon Way internal server error, please contact support@lemonway.com", LwException::INTERNAL_ERROR);
+                    throw new LwException(
+                        "Lemon Way internal server error, please contact support@lemonway.com",
+                        LwException::INTERNAL_ERROR
+                    );
                     break;
                 default:
                     break;
@@ -926,18 +1030,18 @@ class LemonWayAPI
     /**
      * Print Card Form
      *
-     * @param string    $moneyInToken
-     * @param string    $cssUrl
-     * @param string    $language
+     * @param string $moneyInToken
+     * @param string $cssUrl
+     * @param string $language
+     *
+     * @throws \LemonWay\Lib\LwException
      */
     public function printCardForm($moneyInToken, $cssUrl = '', $language = 'en')
     {
-        // If Payxpert
-        // echo("<script>location.href = '".$this->config->wkUrl . "?moneyintoken=" . $moneyInToken . '&p=' . urlencode($cssUrl) . '&lang=' . $language."';</script>");
-
         // If Atos
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $this->config->wkUrl . "?moneyintoken=" . $moneyInToken . '&p=' . urlencode($cssUrl) . '&lang=' . $language);
+        $queryStrings = "?moneyintoken=" . $moneyInToken . '&p=' . urlencode($cssUrl) . '&lang=' . $language;
+        curl_setopt($ch, CURLOPT_URL, $this->config->wkUrl . $queryStrings);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $this->config->sslVerification);
 
@@ -946,13 +1050,14 @@ class LemonWayAPI
             error_log('curl_err : ' . curl_error($ch));
             throw new LwException(curl_error($ch), LwException::UNKNOWN_ERROR);
         } else {
-            $returnCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $returnCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
             switch ($returnCode) {
                 case 200:
                     curl_close($ch);
                     $parsedUrl = parse_url($this->config->wkUrl);
                     $root = strstr($this->config->wkUrl, $parsedUrl['path'], true);
-                    $server_output = preg_replace("/src=\"([a-zA-Z\/\.]*)\"/i", "src=\"" . $root . "$1\"", $server_output);
+                    $server_output =
+                        preg_replace("/src=\"([a-zA-Z\/\.]*)\"/i", "src=\"" . $root . "$1\"", $server_output);
                     echo($server_output);
                     break;
                 default:
@@ -971,5 +1076,3 @@ class LemonWayAPI
         return $str;
     }
 }
-
-?>
